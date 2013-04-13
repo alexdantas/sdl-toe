@@ -1,13 +1,15 @@
 
 #include "SDLManager.hpp"
 #include "Font.hpp"
+#include "Buffer.hpp"
 
 // Declaration of the global sdl manager
 SDLManager* global_sdl_manager = NULL;
 
 SDLManager::SDLManager()
 {
-	this->screen = NULL;
+	this->screen   = NULL;
+    this->willQuit = false;
 }
 SDLManager::~SDLManager()
 {
@@ -25,6 +27,8 @@ bool SDLManager::init(int width, int height)
 	if (retval)
 		return false;
 
+    this->screenW = width;
+    this->screenH = height;
 	this->screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE);
 	if (!this->screen)
 		return false;
@@ -68,50 +72,60 @@ void SDLManager::refreshScreen()
 {
 	SDL_Flip(this->screen);
 }
+void SDLManager::clearScreen()
+{
+    SDL_FillRect(this->screen, NULL, SDL_MapRGB(this->screen->format, 0, 0, 0));}    
 void SDLManager::run()
 {    
 	//while(!SDL_QuitRequested());
-
-	bool quit = false;
 	SDL_Event event;
 
-	while (!quit)
+	while (!this->willQuit)
 	{
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_KEYDOWN)
-		        inputText(event.key.keysym.sym);
+		        inputText(event.key.keysym.sym, event.key.keysym.unicode);
             
 			if (event.type == SDL_QUIT)
-				quit = true;
+				this->willQuit = true;
 		}
         this->refreshScreen();
 	}
 }
-void SDLManager::inputText(SDLKey key)
+void SDLManager::inputText(SDLKey key, Uint16 unicode)
 {
     static Font font("ttf/Terminus.ttf", 24);
+    static Buffer buffer;
     
-	static std::string text = "";
 	if (key == SDLK_BACKSPACE)
-    {
-		if (!text.empty())
-            text.erase(text.length() - 1);
-	}
+		buffer.backspace();
+    
 	else if (key == SDLK_RETURN)
-    {
-		text = "";
-	}
+		buffer.clear();
+
+    else if (key == SDLK_ESCAPE)
+        this->willQuit = true;
+    
 	else
     {
-		if (text.length() < 20)
+        if (isPrintable(key))
         {
-			if (key == ' ' || key >= 'a' || key <= 'z' ||
-                key >= 'A' || key <= 'Z' || key >= '0' ||
-                key <= '9')
-                text += key;
-		}
-	}
-    font.print(50, 50, text);
+            char c = unicode;
+            buffer.addChar(c);
+        }
+    }
+    font.print((this->screenW - buffer.getLength())/2,
+               (this->screenH)/2, buffer.get().c_str());
+}
+bool SDLManager::isPrintable(SDLKey key)
+{
+    if (key == ' ' ||
+        key >= 'a' || key <= 'z' ||
+        key >= 'A' || key <= 'Z' ||
+        key >= '0' || key <= '9')
+		return true;
+    else
+	    return false;
 }
 

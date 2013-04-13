@@ -4,7 +4,7 @@ CFLAGS  = -Wall -Wextra -g
 LDFLAGS = `sdl-config --cflags --libs` -lSDL_image -lSDL_ttf
 EXE     = platformer
 OBJ     = obj/SDLManager.o obj/main.o obj/Sprite.o \
-          obj/Player.o     obj/Font.o
+          obj/Player.o     obj/Font.o obj/Buffer.o
 
 all: $(EXE)
 	# Build successful!
@@ -21,6 +21,7 @@ run: all
 	./$(EXE)
 
 clean:
+	# Cleaning...
 	-rm -f $(EXE) $(OBJ)
 
 dirs:

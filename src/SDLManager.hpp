@@ -36,17 +36,26 @@ public:
 	//  @note Need to be called constantly.
 	void refreshScreen();
 
+    /// Clears whole screen to black.
+	void clearScreen();
+        
 	/// Places the surface #source (on #position and #cropped) onscreen.
 	//  @note Need to call refreshScreen() after.
 	void renderSurface(SDL_Surface* source, SDL_Rect* crop, SDL_Rect* position);
 
 	void run();
 
-    void inputText(SDLKey key);
+    void inputText(SDLKey key, Uint16 unicode);
     
 private:
 	/// Represents the whole game screen.
 	SDL_Surface* screen;
+    int screenW;
+    int screenH;
+    bool willQuit;
+
+    /// Tells if the #key can be displayer onscreen (not a control key).
+	bool isPrintable(SDLKey key);
 };
 
 //* Singleton global SDL Manager

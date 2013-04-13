@@ -35,6 +35,9 @@ public:
     //  @note Keep in mind you must refresh screen after this.
     //  #style can be "bold", "italic", "underline" and "normal"
     bool print(int x, int y, std::string text, std::string style);
+
+    int getW();
+    int getH();
     
 private:
 	std::string  filepath;

@@ -70,6 +70,16 @@ bool Font::print(int x, int y, std::string text, std::string style)
     TTF_SetFontStyle(this->font, cur_style);
     return this->print(x, y, text);
 }
+int Font::getW()
+{
+    if (this->surface)	return this->surface->w;
+    return 0;
+}
+int Font::getH()
+{
+	if (this->surface) return this->surface->h;
+    return 0;
+}
 // I made these based on this tutorial:
 // http://www.sdltutorials.com/sdl-ttf
 // but it doesn't seem to be working, DAMN
