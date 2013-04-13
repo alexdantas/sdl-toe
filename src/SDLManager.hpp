@@ -37,8 +37,11 @@ public:
 	//  @note Need to call refreshScreen() after.
 	void renderSurface(SDL_Surface* source, SDL_Rect* crop, SDL_Rect* position);
 
+	/// The main loop of the game.
+	//  Here's where the whole game hangs up.
 	void run();
 
+	/// Stores a buffer of input chars and print them onscreen.
     void bufferInput(SDLKey key, Uint16 unicode);
 
 	/// Loads image specified by #filename.

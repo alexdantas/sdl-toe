@@ -23,15 +23,15 @@ public:
 
     /// Sets the current font to be the one on #filepath.
     //  @note Must call load()
-	void setFont(std::string filepath, int size);
+	void setFont(std::string filepath, int size=12);
 
     /// Sets the color of the font on RGB
     //  This is applied automatically, no need to call load().
-	void setColor(int red, int green, int blue);
+	void setColor(int red=255, int green=255, int blue=255);
 
     /// Shows #text on positions #x and #y with #style.
     //  @note Keep in mind you must refresh screen after this.
-    bool print(int x, int y, std::string text);
+    bool print(int x=0, int y=0, std::string text="normal");
     
     /// Shows #text on positions #x and #y with #style.
     //  @note Keep in mind you must refresh screen after this.

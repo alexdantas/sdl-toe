@@ -1,6 +1,5 @@
 
 #include "SDLManager.hpp"
-#include "Player.hpp"
 #include "Font.hpp"
 #include "Music.hpp"
 
@@ -14,9 +13,6 @@ int main(int argc, char* argv[])
 		delete global_sdl_manager;
 		return -1;
 	}
-
-	Player player(250, 12);
-	player.show();
 
 	Font font(FONT_TTF_PATH, 20);
 	font.print(200, 100, "Olha, o mario ali em cima!");

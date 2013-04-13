@@ -1,11 +1,11 @@
-
 #include "Player.hpp"
 
 Player::Player(int x=0, int y=0)
 {
 	this->sprite = new Sprite(SPRITE_IMAGE_PATH);
-	this->sprite->load();
-	this->sprite->setTransparentRGBColor(0xFF, 0xFF, 0xFF);
+	this->sprite->setTransparentRGBColor(255, 255, 255);
+    
+    this->animation = new Animation("img/andando.png", 20, 39, 5);
 
 	setPosition(x, y);
     this->velX = 0;
@@ -13,7 +13,8 @@ Player::Player(int x=0, int y=0)
 }
 Player::~Player()
 {
-	delete this->sprite;
+	if (this->sprite) delete this->sprite;
+	if (this->animation) delete this->animation;    
 }
 void Player::show()
 {

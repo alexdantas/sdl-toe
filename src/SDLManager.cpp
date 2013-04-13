@@ -2,6 +2,7 @@
 #include "SDLManager.hpp"
 #include "Font.hpp"
 #include "Buffer.hpp"
+#include "Player.hpp"
 
 // Declaration of the global sdl manager
 SDLManager* global_sdl_manager = NULL;
@@ -100,11 +101,15 @@ void SDLManager::refreshScreen()
 }
 void SDLManager::clearScreen()
 {
-    SDL_FillRect(this->screen, NULL, SDL_MapRGB(this->screen->format, 0, 0, 0));}    
+    SDL_FillRect(this->screen, NULL, SDL_MapRGB(this->screen->format, 0, 0, 0));
+}    
 void SDLManager::run()
 {    
 	//while(!SDL_QuitRequested());
 	SDL_Event event;
+
+	Player player(250, 12);
+	player.show();
 
 	while (!this->willQuit)
 	{
@@ -118,8 +123,10 @@ void SDLManager::run()
 			if (event.type == SDL_QUIT)
 				this->willQuit = true;
 		}
+        player.animation->nextFrame();
+        player.animation->render(100, 100);
         this->refreshScreen();
-		this->delay_ms(50);
+		this->delay_ms(250);
 	}
 }
 void SDLManager::bufferInput(SDLKey key, Uint16 unicode)

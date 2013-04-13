@@ -1,7 +1,7 @@
 
 #include "Font.hpp"
 
-Font::Font(std::string filepath, int size=12)
+Font::Font(std::string filepath, int size)
 {
 	this->surface = NULL;
     this->font    = NULL;
@@ -25,12 +25,12 @@ bool Font::load()
 
 	return true;
 }
-void Font::setFont(std::string filepath, int size=12)
+void Font::setFont(std::string filepath, int size)
 {
 	this->filepath = filepath;
 	this->size = size;
 }
-void Font::setColor(int red=255, int green=255, int blue=255)
+void Font::setColor(int red, int green, int blue)
 {
 	this->color.r = red;
 	this->color.g = green;

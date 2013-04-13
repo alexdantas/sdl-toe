@@ -5,6 +5,7 @@ Sprite::Sprite(std::string filename)
 {
 	setFilename(filename);
 	this->surface  = NULL;
+    this->load();
 }
 Sprite::~Sprite()
 {
@@ -14,13 +15,20 @@ void Sprite::setFilename(std::string newFilename)
 {
 	this->filename = newFilename;
 }
-void Sprite::load()
+bool Sprite::load()
 {
 	if (this->surface) SDL_FreeSurface(this->surface);
+    
 	this->surface = SDLManager::loadImage(this->filename);
+    if (!this->surface)
+    {
+        SDLManager::errorLog("Couldn't load sprite on " + this->filename);
+        return false;
+    }
 
 	// Will print image at it's original size
 	this->crop(0, 0, this->surface->w, this->surface->h);
+    return true;
 }
 void Sprite::crop(int x, int y, int w, int h)
 {
