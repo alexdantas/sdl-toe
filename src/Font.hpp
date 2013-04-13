@@ -14,9 +14,11 @@ public:
     
 	virtual ~Font();
 
-    /// Loads a font into memory.
-    //  Automatically called when initialized, this can be used to
-    //  refresh when setFont() is called.
+    /// Loads the font into memory.
+    //  This is automatically called when initialized, don't bother
+    //  with it.
+    //  The only situation on which you might need to call it is when
+    //  you call setFont().    
 	bool load();
 
     /// Sets the current font to be the one on #filepath.

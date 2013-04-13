@@ -17,7 +17,7 @@ void Sprite::setFilename(std::string newFilename)
 void Sprite::load()
 {
 	if (this->surface) SDL_FreeSurface(this->surface);
-	this->surface = global_sdl_manager->loadImage(this->filename);
+	this->surface = SDLManager::loadImage(this->filename);
 
 	// Will print image at it's original size
 	this->crop(0, 0, this->surface->w, this->surface->h);

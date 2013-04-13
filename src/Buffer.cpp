@@ -1,3 +1,4 @@
+/// Implementation of the Buffer. Have a nice day
 
 #include "Buffer.hpp"
 

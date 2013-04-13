@@ -13,29 +13,55 @@ SDLManager::SDLManager()
 }
 SDLManager::~SDLManager()
 {
+    Mix_CloseAudio();
     SDL_EnableUNICODE(SDL_DISABLE);
+	TTF_Quit();    
 	// SDL_Quit already does this for me
 	//SDL_FreeSurface(this->screen);
 	SDL_Quit();
-	TTF_Quit();
 }
 bool SDLManager::init(int width, int height)
 {
 	int retval = 0;
 
-	retval = SDL_Init(SDL_INIT_EVERYTHING);
+	retval = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 	if (retval)
+    {
+        SDLManager::errorLog("Couldn't start SDL");
 		return false;
+    }
 
     this->screenW = width;
     this->screenH = height;
 	this->screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE);
 	if (!this->screen)
+    {
+        SDLManager::errorLog("Couldn't set video mode");
 		return false;
+    }
 
 	if (TTF_Init())
+    {
+        SDLManager::errorLog("Couldn't start TTF");        
 		return false;
+    }
 
+    // TODO: how do I find out the optimal audio rate of a music?
+    int    audio_rate     = 30000;  //44000; //22050;
+    Uint16 audio_format   = AUDIO_S16; // 16-bit stereo
+    int    audio_channels = 2;
+    int    audio_buffers  = 4096;
+    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
+    {
+        SDLManager::errorLog("Couldn't start Audio");        
+        return false;
+    }
+
+    // I say this here: http://www.kekkai.org/roger/sdl/mixer/
+    // but don't quite know what it does.
+    //Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
+    
+    
 	SDL_WM_SetCaption("Platformer", "hey, get back here!");
 	SDL_EnableUNICODE(SDL_ENABLE);
 	return 0;
@@ -57,7 +83,7 @@ SDL_Surface* SDLManager::loadImage(std::string filename)
 	else
 		image = SDL_DisplayFormat(tmpImage);
 
-	freeImage(tmpImage);
+    SDLManager::freeImage(tmpImage);
 	return image;
 }
 void SDLManager::freeImage(SDL_Surface* image)
@@ -85,15 +111,18 @@ void SDLManager::run()
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_KEYDOWN)
-		        inputText(event.key.keysym.sym, event.key.keysym.unicode);
+            {
+		        bufferInput(event.key.keysym.sym, event.key.keysym.unicode);
+            }
             
 			if (event.type == SDL_QUIT)
 				this->willQuit = true;
 		}
         this->refreshScreen();
+		this->delay_ms(50);
 	}
 }
-void SDLManager::inputText(SDLKey key, Uint16 unicode)
+void SDLManager::bufferInput(SDLKey key, Uint16 unicode)
 {
     static Font font("ttf/Terminus.ttf", 24);
     static Buffer buffer;
@@ -115,8 +144,7 @@ void SDLManager::inputText(SDLKey key, Uint16 unicode)
             buffer.addChar(c);
         }
     }
-    font.print((this->screenW - buffer.getLength())/2,
-               (this->screenH)/2, buffer.get().c_str());
+    font.print(0, (this->screenH)/2, buffer.get().c_str());
 }
 bool SDLManager::isPrintable(SDLKey key)
 {
@@ -128,4 +156,7 @@ bool SDLManager::isPrintable(SDLKey key)
     else
 	    return false;
 }
-
+void SDLManager::errorLog(std::string msg)
+{
+    std::cerr << msg << std::endl;
+}

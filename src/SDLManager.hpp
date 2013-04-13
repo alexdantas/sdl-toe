@@ -2,9 +2,11 @@
 #define SDLMANAGER_H_DEFINED
 
 #include <string>
+#include <iostream>
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
 #include "SDL/SDL_ttf.h"
+#include "SDL/SDL_mixer.h"
 
 //* Handles all direct SDL calls
 //  A simple SDL object wrapper
@@ -24,14 +26,6 @@ public:
 	/// Pauses the whole program for #delay milliseconds (1/1000 of a second).
 	void delay_ms(int delay);
 
-	/// Loads image specified by #filename.
-	//  @return The pointer to it if OK, NULL if something strange happened.
-	//  @note   Remember to call freeImage() if loaded sucessfully.
-	SDL_Surface* loadImage(std::string filename);
-
-	/// Cleans #image from memory, safe-checking if NULL.
-	void freeImage(SDL_Surface* image);
-
 	/// Effectively draws everything that's onscreen.
 	//  @note Need to be called constantly.
 	void refreshScreen();
@@ -45,7 +39,19 @@ public:
 
 	void run();
 
-    void inputText(SDLKey key, Uint16 unicode);
+    void bufferInput(SDLKey key, Uint16 unicode);
+
+	/// Loads image specified by #filename.
+	//  @return The pointer to it if OK, NULL if something strange happened.
+	//  @note   Remember to call freeImage() if loaded sucessfully.
+	static SDL_Surface* loadImage(std::string filename);
+
+	/// Cleans #image from memory, safe-checking if NULL.
+	static void freeImage(SDL_Surface* image);
+
+    /// Prints #msg on standard error output.
+	//  Defaults to the console.
+    static void errorLog(std::string msg);
     
 private:
 	/// Represents the whole game screen.

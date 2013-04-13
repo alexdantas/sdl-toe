@@ -12,13 +12,8 @@ Font::Font(std::string filepath, int size=12)
 Font::~Font()
 {
 //  Why does this gives me a Segmentation Fault?
-//	if (this->font) TTF_CloseFont(this->font);
+//	if (this->font)    TTF_CloseFont(this->font);
 	if (this->surface) SDL_FreeSurface(this->surface);
-}
-void Font::setFont(std::string filepath, int size=12)
-{
-	this->filepath = filepath;
-	this->size = size;
 }
 bool Font::load()
 {
@@ -29,6 +24,11 @@ bool Font::load()
 		return false;
 
 	return true;
+}
+void Font::setFont(std::string filepath, int size=12)
+{
+	this->filepath = filepath;
+	this->size = size;
 }
 void Font::setColor(int red=255, int green=255, int blue=255)
 {

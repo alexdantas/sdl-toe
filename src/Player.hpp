@@ -18,6 +18,7 @@ public:
 
 private:
 	int x; int y;
+    int velX; int velY;
 	Sprite* sprite;
 };
 
