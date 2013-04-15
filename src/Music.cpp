@@ -1,11 +1,9 @@
-
 #include "Music.hpp"
 
 Music::Music(std::string filepath)
 {
     this->music     = NULL;
 	this->setMusic(filepath);
-    this->isPlaying = false;
     this->load();
 }
 Music::~Music()
@@ -19,7 +17,7 @@ bool Music::load()
     this->music = Mix_LoadMUS(this->filepath.c_str());
     if (!this->music)
     {
-        SDLManager::errorLog("Couldn't load music on " + this->filepath);
+        SDLManager::errorLog("Music::load: Couldn't load music on " + this->filepath);
         return false;
     }
 
@@ -36,24 +34,17 @@ bool Music::play(int times)
 
     if (Mix_PlayMusic(this->music, times))
     {
-        SDLManager::errorLog("Couldn't play music on " + this->filepath); 
+        SDLManager::errorLog("Couldn't play music on " + this->filepath);
         return false;
     }
 
-    this->isPlaying = true;
-    
 //  how can I make it call a member function when done? apparently it
 //	doesnt work this way
 //	Mix_HookMusicFinished(this->finishedPlaying);
-    
+
     return true;
 }
-void Music::stop()
-{
-	Mix_HaltMusic();
-}
-void Music::finishedPlaying()
-{
-	this->isPlaying = false;
-}
-
+// void Music::finishedPlaying()
+// {
+// 	this->isPlaying = false;
+// }

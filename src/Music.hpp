@@ -1,3 +1,6 @@
+/// @file Music.hpp Handles music-playing
+//
+//  You can load and play a music.
 
 #ifndef MUSIC_H_DEFINED
 #define MUSIC_H_DEFINED
@@ -11,7 +14,7 @@ public:
     //  Yeah, don't bother calling any of the functions below unless
     //  you want to override the music filepath.
     Music(std::string filepath);
-    
+
     virtual ~Music();
 
     /// Loads the music into memory.
@@ -29,13 +32,19 @@ public:
     //  @param times How many times we'll play the music. If -1,
     //  infinite loop.
     bool play(int times=-1);
-    void stop();
+
+    // The problem with Mix's API is that when I tell it to
+    // stop playing music, it stops all musics currently playing
+    //void stop();
 
     /// This function's called automatically when the music stops.
     //  It warns internally that the music has stopped.
     //  @note Don't you dare call it! False alarms are not welcome.
-    void finishedPlaying();
-    
+    //
+    //  BUG: Mix doesn't allow you to define a callback liek this.
+    //       what should I do?
+    //void finishedPlaying();
+
 private:
     Mix_Music*  music;
     std::string filepath;
@@ -43,4 +52,3 @@ private:
 };
 
 #endif /* MUSIC_H_DEFINED */
-

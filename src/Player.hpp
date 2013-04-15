@@ -5,24 +5,33 @@
 #include "Sprite.hpp"
 #include "Animation.hpp"
 
-/// Where the player's sprite's located
-#define SPRITE_IMAGE_PATH "img/mario.png"
-
 class Player
 {
 public:
-    Player(int x, int y);
+    /// Initializes the Player with all default values.
+    Player(int x=0, int y=0);
     virtual ~Player();
 
+    /// Animates and shows the player onscreen.
 	void show();
+
+    /// Sets the current position to #x and #y.
 	void setPosition(int x, int y);
-    Animation* animation;
-    
+
+    /// Makes the player start the next possible animation.
+    //  @warning This should be used for debugging purposes only.
+	void nextAnimation();
+
 private:
-	int x; int y;
-    int velX; int velY;
-	Sprite* sprite;
+	int x;
+    int y;
+    int velX;
+    int velY;
+
+    Animation*  current; ///< Current animation the player's having
+    Animation*  walking;
+    Animation*  walking_other;
+    Animation*  jumping;
 };
 
 #endif /* PLAYER_H_DEFINED */
-
