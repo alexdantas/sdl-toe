@@ -2,10 +2,10 @@
 #include <sstream> // for autocasting values into strings
 #include "SDLManager.hpp"
 #include "Font.hpp"
-#include "Buffer.hpp"
 #include "Player.hpp"
 #include "Music.hpp"
 #include "Timer.hpp"
+#include "ParticleContainer.hpp"
 
 // Declaration of the global sdl manager
 SDLManager* global_sdl_manager = NULL;
@@ -13,13 +13,13 @@ SDLManager* global_sdl_manager = NULL;
 SDLManager::SDLManager()
 {
 	this->screen   = NULL;
-    this->willQuit = false;
+	this->willQuit = false;
 }
 SDLManager::~SDLManager()
 {
-//    Mix_Quit();
-    Mix_CloseAudio();
-    SDL_EnableUNICODE(SDL_DISABLE);
+//	  Mix_Quit();
+	Mix_CloseAudio();
+	SDL_EnableUNICODE(SDL_DISABLE);
 	TTF_Quit();
 	// SDL_Quit already does this for me
 	//SDL_FreeSurface(this->screen);
@@ -29,61 +29,62 @@ bool SDLManager::init(int width, int height, int framerate)
 {
 	int retval = 0;
 
-    // SDL
-	retval = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	// SDL
+	retval = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
 	if (retval)
-    {
-        SDLManager::errorLog("Couldn't start SDL");
+	{
+		SDLManager::errorLog("Couldn't start SDL");
 		return false;
-    }
+	}
 
-    // Video
-    this->screenW = width;
-    this->screenH = height;
+	// Video
+	this->screenW = width;
+	this->screenH = height;
 	this->screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE);
 	if (!this->screen)
-    {
-        SDLManager::errorLog("Couldn't set video mode");
+	{
+		SDLManager::errorLog("Couldn't set video mode");
 		return false;
-    }
+	}
 
-    // TTF
+	// TTF
 	if (TTF_Init())
-    {
-        SDLManager::errorLog("Couldn't start TTF");
+	{
+		SDLManager::errorLog("Couldn't start TTF");
 		return false;
-    }
+	}
 	SDL_EnableUNICODE(SDL_ENABLE);
 
 // Don't I need to do this to support MP3 and OGG?
 // Why on earth does this always fails?
 // Well... bitwise operators suck anyway...
 //
-//    int flags   = MIX_INIT_OGG | MIX_INIT_MP3;
-//    int initted = Mix_Init(flags);
-//    if ((initted&flags) != flags)
-//    {
-//        SDLManager::errorLog("Mix_Init: Couldn't start OGG and MP3 support");
-//        return false;
+//	  int flags	  = MIX_INIT_OGG | MIX_INIT_MP3;
+//	  int initted = Mix_Init(flags);
+//	  if ((initted&flags) != flags)
+//	  {
+//		  SDLManager::errorLog("Mix_Init: Couldn't start OGG and MP3 support");
+//		  return false;
 //	}
 
-    // TODO: how do I find out the optimal audio rate of a music?
-    int    audio_rate     = 30000;     // Default is 22050
-    Uint16 audio_format   = AUDIO_S16; // 16-bit stereo
-	int    audio_channels = 2;
-    int    audio_buffers  = 4096;
-    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
-    {
-        SDLManager::errorLog("Mix_OpenAudio: Couldn't start Audio");
-        return false;
-    }
+	// TODO: how do I find out the optimal audio rate of a music?
+	int	   audio_rate	  = 30000;	   // Default is 22050
+	Uint16 audio_format	  = AUDIO_S16; // 16-bit stereo
+	int	   audio_channels = 2;
+	int	   audio_buffers  = 4096;
+	if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
+	{
+		SDLManager::errorLog("Mix_OpenAudio: Couldn't start Audio");
+		return false;
+	}
 
-    // I saw this here: http://www.kekkai.org/roger/sdl/mixer/
-    // but don't quite know what it does.
-    //Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
+	// I saw this here: http://www.kekkai.org/roger/sdl/mixer/
+	// but don't quite know what it does.
+	//Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
 
 	// Framerate manager
 	this->framerate = framerate;
+	this->framerate_delay = (1000/framerate); // 1 second
 
 	SDL_WM_SetCaption("Platformer", "hey, get back here!");
 	return true;
@@ -112,7 +113,7 @@ SDL_Surface* SDLManager::loadImage(std::string filename)
 	else
 		image = SDL_DisplayFormat(tmpImage);
 
-    SDLManager::freeImage(tmpImage);
+	SDLManager::freeImage(tmpImage);
 	return image;
 }
 void SDLManager::freeImage(SDL_Surface* image)
@@ -129,7 +130,7 @@ void SDLManager::refreshScreen()
 }
 void SDLManager::clearScreen()
 {
-    SDL_FillRect(this->screen, NULL, SDL_MapRGB(this->screen->format, 0, 0, 0));
+	SDL_FillRect(this->screen, NULL, SDL_MapRGB(this->screen->format, 0, 0, 0));
 }
 void SDLManager::run()
 {
@@ -138,140 +139,158 @@ void SDLManager::run()
 
 	Player player(250, 12);
 
-	Font font("ttf/Terminus.ttf", 20);
+//	Font font("ttf/Terminus.ttf", 20);
+	Font font("ttf/UbuntuMono.ttf", 20);
 
-    Music music("ogg/mmx-intro.ogg");
-    music.play();
+	Music music("ogg/mmx-intro.ogg");
+	music.play();
 
 	Timer timer;
-    timer.start();
+	Uint32 delta; // will hold the time between current frame and last
 
-// 60 frames per second
-#define MIN_FRAMETIME_MSECS (1000/60)
+	Buffer buffer;
+
+	ParticleContainer particles("img/jumping-left.png");
+	particles.addParticle(5, 3);
+	particles.addParticle(100, 200);
 
 	while (!this->willQuit)
 	{
-	    // Let's wait a second if the framerate is too low.
-	    timer.stop();
-    	Uint32 delta = timer.delta_ms();
-
-        // comment this to unlimit the framerate
-        if (delta < MIN_FRAMETIME_MSECS)
-		    SDL_Delay(MIN_FRAMETIME_MSECS - delta);
-//		this->framerateWait();
-
 		timer.start();
 
-		static std::stringstream showDelta;
-        showDelta.str("");
-		showDelta << "Delta: " <<  delta << " ms";
-	   	font.print(0, 400, showDelta.str().c_str());
+		// INPUT
 
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_KEYDOWN)
-            {
-		        bufferInput(event.key.keysym.sym, event.key.keysym.unicode);
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_p:
-                    SDLManager::pauseMusic();
-                    break;
-                case SDLK_r:
-                    SDLManager::resumeMusic();
-                    break;
-                case SDLK_s:
-                    SDLManager::stopMusic();
-                    break;
+			{
+				bufferInput(&buffer, event.key.keysym.sym, event.key.keysym.unicode);
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_p:
+					SDLManager::pauseMusic();
+					break;
+				case SDLK_r:
+					SDLManager::resumeMusic();
+					break;
+				case SDLK_s:
+					SDLManager::stopMusic();
+					break;
 				case SDLK_n:
-//					player.nextAnimation();
-                    break;
-                default: break;
-                }
-            }
+					// change font
+					break;
+				default: break;
+				}
+			}
+			if (event.type == SDL_MOUSEBUTTONDOWN)
+			{
+				int mouseX, mouseY;
+				SDL_GetMouseState(&mouseX, &mouseY);
 
+				// do something with the mouse position
+			}
 			if (event.type == SDL_QUIT)
 				this->willQuit = true;
 		}
 
-        this->clearScreen();
-        font.print(0, 10, "Teste de SDL");
-        font.print(0, 30, "p: pausa musica");
-        font.print(0, 50, "r: continua musica");
-        font.print(0, 70, "s: para musica");
-        font.print(0, 90, "ESC: sai do \"jogo\"");
-        font.print(200, 100, "Digite alguma coisa para mim");
+		// LOGIC
+
+		player.update();
+
+		// RENDER
+
+		this->clearScreen();
+		font.print(0, 10, "Teste de SDL");
+		font.print(0, 30, "p: pausa musica");
+		font.print(0, 50, "r: continua musica");
+		font.print(0, 70, "s: para musica");
+		font.print(0, 90, "ESC: sai do \"jogo\"");
+		font.print(200, 100, "Digite alguma coisa para mim");
+
+		// Show delta onscreen
+		static std::stringstream showDelta;
+		showDelta.str("");
+		showDelta << "Delta: " <<  delta << " ms";
+		font.print(0, 400, showDelta.str().c_str());
+
+		font.print(0, (this->screenH)/2, buffer.get().c_str());
 
 		player.show();
+		particles.show();
 
-        this->refreshScreen();
-//		this->delay_ms(250);
+		this->refreshScreen();
+
+		// Let's wait a second if the framerate is too low.
+		timer.stop();
+		delta = timer.delta_ms();
+
+		// comment this to unlimit the framerate
+		if (delta < (this->framerate_delay))
+			this->delay_ms((this->framerate_delay) - delta);
 	}
 }
-void SDLManager::bufferInput(SDLKey key, Uint16 unicode)
+void SDLManager::bufferInput(Buffer* buffer, SDLKey key, Uint16 unicode)
 {
-    static Font font("ttf/Terminus.ttf", 24);
-    static Buffer buffer;
+	static Font font("ttf/Terminus.ttf", 24);
 
 	if (key == SDLK_BACKSPACE)
-		buffer.backspace();
+		buffer->backspace();
 
 	else if (key == SDLK_RETURN)
-		buffer.clear();
+		buffer->clear();
 
-    else if (key == SDLK_ESCAPE)
-        this->willQuit = true;
+	else if (key == SDLK_ESCAPE)
+		this->willQuit = true;
 
 	else
-    {
-        if (isPrintable(key))
-        {
-            char c = unicode;
-            buffer.addChar(c);
-        }
-    }
-    font.print(0, (this->screenH)/2, buffer.get().c_str());
+	{
+		if (isPrintable(key))
+		{
+			char c = unicode;
+			buffer->addChar(c);
+		}
+	}
 }
 bool SDLManager::isPrintable(SDLKey key)
 {
-    if (key == ' ' ||
-        key >= 'a' || key <= 'z' ||
-        key >= 'A' || key <= 'Z' ||
-        key >= '0' || key <= '9')
+	if (key == ' ' ||
+		key >= 'a' || key <= 'z' ||
+		key >= 'A' || key <= 'Z' ||
+		key >= '0' || key <= '9')
 		return true;
-    else
-	    return false;
+	else
+		return false;
 }
 void SDLManager::errorLog(std::string msg)
 {
-    std::cerr << msg << std::endl;
+	std::cerr << msg << std::endl;
 }
 bool SDLManager::musicPlaying()
 {
 	if (Mix_PlayingMusic())
-        return true;
-    else
-        return false;
+		return true;
+	else
+		return false;
 }
 bool SDLManager::musicPaused()
 {
 	if (Mix_PausedMusic())
-        return true;
-    else
-        return false;
+		return true;
+	else
+		return false;
 }
 void SDLManager::pauseMusic()
 {
-    if (SDLManager::musicPlaying())
+	if (SDLManager::musicPlaying())
 		Mix_PauseMusic();
 }
 void SDLManager::resumeMusic()
 {
 	if (SDLManager::musicPaused())
-        Mix_ResumeMusic();
+		Mix_ResumeMusic();
 }
 void SDLManager::stopMusic()
 {
-    if (SDLManager::musicPlaying() || SDLManager::musicPaused())
-        Mix_HaltMusic();
+	if (SDLManager::musicPlaying() || SDLManager::musicPaused())
+		Mix_HaltMusic();
 }

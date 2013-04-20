@@ -5,10 +5,10 @@ int main(int argc, char* argv[])
 {
 	// shut up, damn compiler
 	if (argc == 666)
-        return (int)argv[1337];
+		return (int)argv[1337];
 
 	global_sdl_manager = new SDLManager();
-	if (!global_sdl_manager->init(500, 500))
+	if (!global_sdl_manager->init(500, 500, 30))
 	{
 		delete global_sdl_manager;
 		return -1;
