@@ -28,31 +28,30 @@ bool Animation::load()
 
 	this->sprite->load();
 
-	for (int i = 0; i < this->maxFrame; i++)
+	for (int i = 0; i < (this->maxFrame); i++)
 	{
 		this->frames[i].x = i * this->frameWidth;
 		this->frames[i].y = 0;
 		this->frames[i].w = this->frameWidth;
 		this->frames[i].h = this->frameHeight;
 	}
-
 	return true;
 }
 void Animation::start()
 {
-	if (!this->isRunning())
-	{
-		this->running = true;
-		this->timer.start();
-	}
+	if (this->speed == 0)  return;
+	if (this->isRunning()) return;
+
+	this->running = true;
+	this->timer.start();
 }
 void Animation::stop()
 {
-	if (this->isRunning())
-	{
-		this->running = false;
-		this->timer.stop();
-	}
+	if (this->speed == 0)   return;
+	if (!this->isRunning()) return;
+
+	this->running = false;
+	this->timer.stop();
 }
 bool Animation::isRunning()
 {
@@ -60,23 +59,31 @@ bool Animation::isRunning()
 }
 void Animation::animate()
 {
+	if (this->speed == 0)   return;
 	if (!this->isRunning()) return;
 
-	this->timer.stop();
-	if ((this->timer.delta_ms()) < (this->speed))
+	this->timer.pause();
+	if ((this->timer.delta()) < (this->speed))
+    {
+        timer.unpause();
 		return;
+    }
 
 	this->nextFrame();
-	this->timer.start();
+	this->timer.restart();
 }
 void Animation::nextFrame()
 {
+	if (this->speed == 0) return;
+
 	this->curFrame++;
 
-	if (this->curFrame > this->maxFrame) this->restart();
+	if (this->curFrame >= this->maxFrame) this->restart();
 }
 void Animation::prevFrame()
 {
+	if (this->speed == 0) return;
+
 	this->curFrame--;
 
 	if (this->curFrame < 0) this->goToLast();
@@ -111,3 +118,4 @@ void Animation::setSpeed(int speed)
 {
 	this->speed = speed;
 }
+

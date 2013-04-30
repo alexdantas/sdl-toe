@@ -44,7 +44,7 @@ void Sprite::render(int x, int y)
 	tmpRect.x = x;
 	tmpRect.y = y;
 
-	global_sdl_manager->renderSurface(this->surface, &(this->clipRect), &tmpRect);
+	SDLManager::renderSurface(this->surface, &(this->clipRect), &tmpRect);
 }
 void Sprite::setTransparentRGBColor(int red, int green, int blue)
 {

@@ -34,7 +34,7 @@ Then you can send the result to your not-so-tech-savvy friend, who'll just click
 the .exe without thinking twice. He'll have the same experience you're having,
 so don't worry.
 
-
 ## Dependences ##
 
 	SDL, SDL_Image, SDL_TTF, SDL_Mixer
+

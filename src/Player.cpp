@@ -1,13 +1,30 @@
 #include "Player.hpp"
 
-Player::Player(float x, float y)
+Player::Player(float x, float y): VisibleObject(x, y)
 {
-	float speed = 250;
-	this->walking		= new Animation("img/andando.png", 20, 39, 5, speed);
-	this->walking_other = new Animation("img/andando-outro-lado.png", 20, 39, 5, speed);
-	this->jumping		= new Animation("img/pulando.png", 27, 39, 5, speed);
+	VisibleObject(x, y); // parent constructor
 
-	this->current = walking;
+	float speed = 120;
+
+	this->animation[STOPPED]       = new Animation("img/standing.png", 15, 16, 1);
+	this->animation[STOPPED]->setTransparentRGBColor(255, 255, 255);
+
+	this->animation[WALKING_RIGHT] = new Animation("img/walking-right.png", 15, 16, 2, speed);
+	this->animation[WALKING_RIGHT]->setTransparentRGBColor(255, 255, 255);
+
+	this->animation[WALKING_LEFT]  = new Animation("img/walking-left.png", 15, 16, 2, speed);
+	this->animation[WALKING_LEFT]->setTransparentRGBColor(255, 255, 255);
+
+	this->animation[JUMPING_RIGHT] = new Animation("img/jumping-right.png", 16, 16, 1);
+	this->animation[JUMPING_RIGHT]->setTransparentRGBColor(255, 255, 255);
+
+	this->animation[JUMPING_LEFT]  = new Animation("img/jumping-left.png", 16, 16, 1);
+	this->animation[JUMPING_LEFT]->setTransparentRGBColor(255, 255, 255);
+
+//	this->walking		= new Animation("img/apterus-andando.png", 446, 398, 12, speed);
+
+    this->currentState = STOPPED;
+	this->current      = this->animation[STOPPED];
 	this->current->start();
 
 	setPosition(x, y);
@@ -15,54 +32,22 @@ Player::Player(float x, float y)
 	this->velY = 0;
 	this->isJumping = true;
 }
-void Player::nextAnimation()
-{
-	this->current->stop();
-
-	if (this->current == walking)
-		this->current = walking_other;
-
-	else if (this->current == walking_other)
-		this->current = jumping;
-
-	else if (this->current == jumping)
-		this->current = walking_other;
-
-	this->current->start();
-}
 Player::~Player()
 {
-//	if (this->animation) delete this->animation;
+	if (this->animation[STOPPED])       delete this->animation[STOPPED];
+	if (this->animation[WALKING_RIGHT]) delete this->animation[WALKING_RIGHT];
+	if (this->animation[WALKING_LEFT])  delete this->animation[WALKING_LEFT];
+	if (this->animation[JUMPING_RIGHT]) delete this->animation[JUMPING_RIGHT];
+	if (this->animation[JUMPING_LEFT])  delete this->animation[JUMPING_LEFT];
 }
 void Player::show()
 {
 	this->current->animate();
 	this->current->render((int)this->x, (int)this->y);
 }
-void Player::setPosition(float x=0, float y=0)
-{
-	this->x = x;
-	this->y = y;
-}
-void Player::moveDown(float x)
-{
-	this->y -= x;
-}
-void Player::moveUp(float x)
-{
-	this->y += x;
-}
-void Player::moveLeft(float x)
-{
-	this->x -= x;
-}
-void Player::moveRight(float x)
-{
-	this->x += x;
-}
 void Player::update()
 {
-	this->sufferGravity(GRAVITY);
+//	this->sufferGravity(GRAVITY);
 }
 void Player::sufferGravity(float g)
 {
@@ -77,5 +62,13 @@ void Player::jump()
 
 	this->isJumping = true;
 	this->velY += 10;
+}
+void Player::changeAnimation(Player::AnimationState animation)
+{
+    this->current->stop();
+
+    this->currentState = animation;
+	this->current      = this->animation[animation];
+	this->current->start();
 }
 

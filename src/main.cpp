@@ -1,22 +1,20 @@
-
+// main.cpp
+// Starting point of execution
 #include "SDLManager.hpp"
+#include "GameManager.hpp"
 
 int main(int argc, char* argv[])
 {
-	// shut up, damn compiler
-	if (argc == 666)
-		return (int)argv[1337];
-
-	global_sdl_manager = new SDLManager();
-	if (!global_sdl_manager->init(500, 500, 30))
+	if (!SDLManager::init(800, 600, 30))
 	{
-		delete global_sdl_manager;
+		SDLManager::errorLog("Couldn't start SDL!");
 		return -1;
 	}
+	GameManager game;
 
-	global_sdl_manager->refreshScreen();
-	global_sdl_manager->run();
+	// This is the main loop of the game.
+	game.run();
 
-	delete global_sdl_manager;
 	return 0;
 }
+

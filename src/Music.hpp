@@ -20,12 +20,9 @@ public:
     /// Loads the music into memory.
     //  This is automatically called when initialized, don't bother
     //  with it.
-    //  The only situation on which you might need to call it is when
-    //  you call setMusic().
     bool load();
 
     /// Sets the current music to be the one on #filepath.
-    //  @note Must call load()
     void setMusic(std::string filepath);
 
     /// Plays the loaded music.
@@ -33,9 +30,21 @@ public:
     //  infinite loop.
     bool play(int times=-1);
 
-    // The problem with Mix's API is that when I tell it to
-    // stop playing music, it stops all musics currently playing
-    //void stop();
+    /// Stops the music (along with all musics currently playing).
+    //  The problem with Mix's API is that when I tell it to
+    //  stop playing music, it stops all musics currently playing
+    void stop();
+
+    /// Pauses the music (along with all musics currently playing).
+	void pause();
+
+    /// Unpauses the music (along with all musics currently playing).
+    void unpause();
+
+    /// Restarts the music.
+    //  @note Stops all musics that are currently playing but restarts
+    //        only the current song.
+    void restart();
 
     /// This function's called automatically when the music stops.
     //  It warns internally that the music has stopped.

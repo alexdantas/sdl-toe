@@ -1,28 +1,31 @@
 
 #include <sstream> // for autocasting values into strings
 #include "SDLManager.hpp"
-#include "Font.hpp"
-#include "Player.hpp"
-#include "Music.hpp"
-#include "Timer.hpp"
-#include "ParticleContainer.hpp"
 
-// Declaration of the global sdl manager
-SDLManager* global_sdl_manager = NULL;
+// Must intialize static members out of the class D:
+SDL_Surface* SDLManager::screen          = NULL;
+bool         SDLManager::willQuit        = false;
+int          SDLManager::screenW         = 0;
+int          SDLManager::screenH         = 0;
+uint32_t     SDLManager::framerate       = 0;
+uint32_t     SDLManager::framerate_delay = 0;
+uint32_t     SDLManager::frame_delta     = 0;
+Timer        SDLManager::framerate_timer;
 
 SDLManager::SDLManager()
 {
-	this->screen   = NULL;
-	this->willQuit = false;
+    // All values are already initialized up there
 }
 SDLManager::~SDLManager()
 {
-//	  Mix_Quit();
+	//Mix_Quit();
 	Mix_CloseAudio();
 	SDL_EnableUNICODE(SDL_DISABLE);
 	TTF_Quit();
+
 	// SDL_Quit already does this for me
-	//SDL_FreeSurface(this->screen);
+	//SDL_FreeSurface(screen);
+
 	SDL_Quit();
 }
 bool SDLManager::init(int width, int height, int framerate)
@@ -38,10 +41,10 @@ bool SDLManager::init(int width, int height, int framerate)
 	}
 
 	// Video
-	this->screenW = width;
-	this->screenH = height;
-	this->screen = SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE);
-	if (!this->screen)
+	screenW = width;
+	screenH = height;
+	screen	= SDL_SetVideoMode(width, height, 32, SDL_HWSURFACE);
+	if (!screen)
 	{
 		SDLManager::errorLog("Couldn't set video mode");
 		return false;
@@ -54,18 +57,6 @@ bool SDLManager::init(int width, int height, int framerate)
 		return false;
 	}
 	SDL_EnableUNICODE(SDL_ENABLE);
-
-// Don't I need to do this to support MP3 and OGG?
-// Why on earth does this always fails?
-// Well... bitwise operators suck anyway...
-//
-//	  int flags	  = MIX_INIT_OGG | MIX_INIT_MP3;
-//	  int initted = Mix_Init(flags);
-//	  if ((initted&flags) != flags)
-//	  {
-//		  SDLManager::errorLog("Mix_Init: Couldn't start OGG and MP3 support");
-//		  return false;
-//	}
 
 	// TODO: how do I find out the optimal audio rate of a music?
 	int	   audio_rate	  = 30000;	   // Default is 22050
@@ -83,22 +74,34 @@ bool SDLManager::init(int width, int height, int framerate)
 	//Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
 
 	// Framerate manager
-	this->framerate = framerate;
-	this->framerate_delay = (1000/framerate); // 1 second
+	framerate = framerate;
+	framerate_delay = (1000/framerate); // 1 second
 
 	SDL_WM_SetCaption("Platformer", "hey, get back here!");
+
+	framerate_timer.start();
 	return true;
 }
 void SDLManager::framerateWait()
 {
-	// this function's supposed to wait as long as needed
-	// to keep a custom framerate
-	// How will I implement it ?
-}
+	frame_delta = framerate_timer.delta();
 
+	if ((frame_delta) < (framerate_delay))
+		SDLManager::delay_ms((framerate_delay) - frame_delta);
+
+	framerate_timer.restart();
+}
+Uint32 SDLManager::getFramerateDelay()
+{
+	return framerate_delay;
+}
 void SDLManager::delay_ms(int delay)
 {
 	SDL_Delay(delay);
+}
+uint32_t SDLManager::getDelta()
+{
+    return frame_delta;
 }
 SDL_Surface* SDLManager::loadImage(std::string filename)
 {
@@ -122,134 +125,15 @@ void SDLManager::freeImage(SDL_Surface* image)
 }
 void SDLManager::renderSurface(SDL_Surface* source, SDL_Rect* crop=NULL, SDL_Rect* position=NULL)
 {
-	SDL_BlitSurface(source, crop, this->screen, position);
+	SDL_BlitSurface(source, crop, screen, position);
 }
 void SDLManager::refreshScreen()
 {
-	SDL_Flip(this->screen);
+	SDL_Flip(screen);
 }
 void SDLManager::clearScreen()
 {
-	SDL_FillRect(this->screen, NULL, SDL_MapRGB(this->screen->format, 0, 0, 0));
-}
-void SDLManager::run()
-{
-	//while(!SDL_QuitRequested());
-	SDL_Event event;
-
-	Player player(250, 12);
-
-//	Font font("ttf/Terminus.ttf", 20);
-	Font font("ttf/UbuntuMono.ttf", 20);
-
-	Music music("ogg/mmx-intro.ogg");
-	music.play();
-
-	Timer timer;
-	Uint32 delta; // will hold the time between current frame and last
-
-	Buffer buffer;
-
-	ParticleContainer particles("img/jumping-left.png");
-	particles.addParticle(5, 3);
-	particles.addParticle(100, 200);
-
-	while (!this->willQuit)
-	{
-		timer.start();
-
-		// INPUT
-
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_KEYDOWN)
-			{
-				bufferInput(&buffer, event.key.keysym.sym, event.key.keysym.unicode);
-				switch (event.key.keysym.sym)
-				{
-				case SDLK_p:
-					SDLManager::pauseMusic();
-					break;
-				case SDLK_r:
-					SDLManager::resumeMusic();
-					break;
-				case SDLK_s:
-					SDLManager::stopMusic();
-					break;
-				case SDLK_n:
-					// change font
-					break;
-				default: break;
-				}
-			}
-			if (event.type == SDL_MOUSEBUTTONDOWN)
-			{
-				int mouseX, mouseY;
-				SDL_GetMouseState(&mouseX, &mouseY);
-
-				// do something with the mouse position
-			}
-			if (event.type == SDL_QUIT)
-				this->willQuit = true;
-		}
-
-		// LOGIC
-
-		player.update();
-
-		// RENDER
-
-		this->clearScreen();
-		font.print(0, 10, "Teste de SDL");
-		font.print(0, 30, "p: pausa musica");
-		font.print(0, 50, "r: continua musica");
-		font.print(0, 70, "s: para musica");
-		font.print(0, 90, "ESC: sai do \"jogo\"");
-		font.print(200, 100, "Digite alguma coisa para mim");
-
-		// Show delta onscreen
-		static std::stringstream showDelta;
-		showDelta.str("");
-		showDelta << "Delta: " <<  delta << " ms";
-		font.print(0, 400, showDelta.str().c_str());
-
-		font.print(0, (this->screenH)/2, buffer.get().c_str());
-
-		player.show();
-		particles.show();
-
-		this->refreshScreen();
-
-		// Let's wait a second if the framerate is too low.
-		timer.stop();
-		delta = timer.delta_ms();
-
-		// comment this to unlimit the framerate
-		if (delta < (this->framerate_delay))
-			this->delay_ms((this->framerate_delay) - delta);
-	}
-}
-void SDLManager::bufferInput(Buffer* buffer, SDLKey key, Uint16 unicode)
-{
-	static Font font("ttf/Terminus.ttf", 24);
-
-	if (key == SDLK_BACKSPACE)
-		buffer->backspace();
-
-	else if (key == SDLK_RETURN)
-		buffer->clear();
-
-	else if (key == SDLK_ESCAPE)
-		this->willQuit = true;
-
-	else
-	{
-		if (isPrintable(key))
-		{
-			char c = unicode;
-			buffer->addChar(c);
-		}
-	}
+	SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
 }
 bool SDLManager::isPrintable(SDLKey key)
 {

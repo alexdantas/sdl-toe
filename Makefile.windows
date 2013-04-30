@@ -4,14 +4,16 @@
 # It assumes you have 'mingw32' and installed SDL for windows
 # on /opt/SDL-1.2.13
 
-CFLAGS  =`/opt/SDL-1.2.13/bin/i586-mingw32msvc-sdl-config --cflags` \
-          -I/opt/SDL-1.2.13/include
-LDFLAGS =`/opt/SDL-1.2.13/bin/i586-mingw32msvc-sdl-config --libs` \
-         -lSDL_image -lSDL_ttf -lSDL_mixer
+SDL_ROOT_DIR =/opt/SDL-1.2.13
+CFLAGS       =`$(SDL_ROOT_DIR)/bin/i586-mingw32msvc-sdl-config --cflags` \
+              -I$(SDL_ROOT_DIR)/include
+LDFLAGS      =`$(SDL_ROOT_DIR)/bin/i586-mingw32msvc-sdl-config --libs` \
+              -lSDL_image -lSDL_ttf -lSDL_mixer
+
+CC      = i586-mingw32msvc-g++
 OBJ     = obj/SDLManager.o obj/main.o      obj/Sprite.o \
           obj/Player.o     obj/Font.o      obj/Buffer.o \
           obj/Music.o      obj/Animation.o obj/Timer.o
-CC      = i586-mingw32msvc-g++
 EXE     = windows/platformer.exe
 
 all: dirs $(EXE)
@@ -33,7 +35,9 @@ clean:
 	-rm -f $(EXE) $(OBJ)
 
 dirs:
-	@mkdir -p windows/img windows/ogg windows/ttf
+	@mkdir -p windows/img windows/ogg windows/ttf windows/wav
 	@cp img/* windows/img
 	@cp ogg/* windows/ogg
 	@cp ttf/* windows/ttf
+	@cp wav/* windows/wav
+
