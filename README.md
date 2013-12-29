@@ -28,7 +28,13 @@ Just do the thing you're very used to do.
     $ make
     $ make run
 
-## Dependences
+Make sure you have installed the following:
 
     SDL, SDL_Image, SDL_TTF, SDL_Mixer
 
+## Contact
+
+Programmed by Alexandre Dantas.
+
+* Homepage: http://alexdantas.net/
+* Mailto: `eu @ alexdantas..net`
