@@ -18,6 +18,9 @@ void Music::setMusic(std::string filepath)
 }
 bool Music::play(int times)
 {
+    if (!SDLManager::hasAudio())
+        return false;
+
     if (!this->music)
         return false;
 
@@ -52,6 +55,8 @@ void Music::restart()
 }
 bool Music::load()
 {
+    if (!SDLManager::hasAudio()) return false;
+
 	if (this->music) Mix_FreeMusic(this->music);
 
     this->music = Mix_LoadMUS(this->filepath.c_str());

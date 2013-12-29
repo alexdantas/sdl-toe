@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-	if (!SDLManager::init(800, 600, 30))
+	if (!SDLManager::init(320, 370, 30))
 	{
 		SDLManager::errorLog("Couldn't start SDL!");
 		return -1;

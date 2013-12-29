@@ -4,13 +4,16 @@
 
 // Must intialize static members out of the class D:
 SDL_Surface* SDLManager::screen          = NULL;
-bool         SDLManager::willQuit        = false;
+SDL_Surface* SDLManager::bg              = NULL;
+SDL_Surface* SDLManager::x               = NULL;
+SDL_Surface* SDLManager::o               = NULL;
 int          SDLManager::screenW         = 0;
 int          SDLManager::screenH         = 0;
 uint32_t     SDLManager::framerate       = 0;
 uint32_t     SDLManager::framerate_delay = 0;
 uint32_t     SDLManager::frame_delta     = 0;
 Timer        SDLManager::framerate_timer;
+bool         SDLManager::startedAudio        = true;
 
 SDLManager::SDLManager()
 {
@@ -25,6 +28,9 @@ SDLManager::~SDLManager()
 
 	// SDL_Quit already does this for me
 	//SDL_FreeSurface(screen);
+	freeImage(bg);
+    freeImage(x);
+    freeImage(o);
 
 	SDL_Quit();
 }
@@ -59,15 +65,15 @@ bool SDLManager::init(int width, int height, int framerate)
 	SDL_EnableUNICODE(SDL_ENABLE);
 
 	// TODO: how do I find out the optimal audio rate of a music?
-	int	   audio_rate	  = 30000;	   // Default is 22050
+	int	   audio_rate	  = 22050;	   // Default is 22050
 	Uint16 audio_format	  = AUDIO_S16; // 16-bit stereo
 	int	   audio_channels = 2;
 	int	   audio_buffers  = 4096;
 	if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
-	{
-		SDLManager::errorLog("Mix_OpenAudio: Couldn't start Audio");
-		return false;
-	}
+    {
+		SDLManager::warningLog("Mix_OpenAudio: Couldn't start Audio");
+        startedAudio = false;
+    }
 
 	// I saw this here: http://www.kekkai.org/roger/sdl/mixer/
 	// but don't quite know what it does.
@@ -77,7 +83,13 @@ bool SDLManager::init(int width, int height, int framerate)
 	framerate = framerate;
 	framerate_delay = (1000/framerate); // 1 second
 
-	SDL_WM_SetCaption("Platformer", "hey, get back here!");
+	SDL_WM_SetCaption("SDL-toe", "hey, get back here!");
+
+    bg = SDLManager::loadImage("img/bg.png");
+    x  = SDLManager::loadImage("img/x.png");
+    o  = SDLManager::loadImage("img/o.png");
+	if (!bg || !x || !o)
+        return false;
 
 	framerate_timer.start();
 	return true;
@@ -127,6 +139,30 @@ void SDLManager::renderSurface(SDL_Surface* source, SDL_Rect* crop=NULL, SDL_Rec
 {
 	SDL_BlitSurface(source, crop, screen, position);
 }
+void SDLManager::renderBackground()
+{
+	SDL_Rect tmpRect;
+	tmpRect.x = 0;
+	tmpRect.y = 0;
+
+	SDLManager::renderSurface(bg, NULL, &tmpRect);
+}
+void SDLManager::renderX(int i, int j)
+{
+	SDL_Rect tmpRect;
+	tmpRect.x = i*100 + i*10;
+	tmpRect.y = j*100 + j*10;
+
+	SDLManager::renderSurface(x, NULL, &tmpRect);
+}
+void SDLManager::renderO(int i, int j)
+{
+	SDL_Rect tmpRect;
+	tmpRect.x = i*100 + i*10;
+	tmpRect.y = j*100 + j*10;
+
+	SDLManager::renderSurface(o, NULL, &tmpRect);
+}
 void SDLManager::refreshScreen()
 {
 	SDL_Flip(screen);
@@ -147,7 +183,11 @@ bool SDLManager::isPrintable(SDLKey key)
 }
 void SDLManager::errorLog(std::string msg)
 {
-	std::cerr << msg << std::endl;
+	std::cerr << "Error: " << msg << std::endl;
+}
+void SDLManager::warningLog(std::string msg)
+{
+	std::cerr << "Warning: " << msg << std::endl;
 }
 bool SDLManager::musicPlaying()
 {
@@ -178,3 +218,57 @@ void SDLManager::stopMusic()
 	if (SDLManager::musicPlaying() || SDLManager::musicPaused())
 		Mix_HaltMusic();
 }
+bool SDLManager::isInsideGrid(int x, int y)
+{
+    if (x >= 0 && x <= 320)
+        if (y >= 0 && y<= 320)
+            return true;
+
+    return false;
+}
+bool SDLManager::isValidCell(int x, int y)
+{
+    int cellW = 100;
+    int cellH = 100;
+    int lineW = 10;
+    int lineH = 10;
+
+    for (int i = 0; i < 3; i++)
+        for (int j = 0; j < 3; j++)
+			if (x >= (i*cellW + i*lineW) && x <= (cellW + i*cellW + i*lineW))
+	        	if (y>= (j*cellH + j*lineH) && y <= (cellH + j*cellH + j*lineH))
+	                return true;
+
+    return false;
+}
+int SDLManager::getIndexX(int x)
+{
+    int cellW = 100;
+    int lineW = 10;
+
+    for (int i = 0; i < 3; i++)
+        if (x >= (i*cellW + i*lineW) && x <= (cellW + i*cellW + i*lineW))
+                return i;
+
+    return 0;
+}
+int SDLManager::getIndexY(int y)
+{
+    int cellH = 100;
+    int lineH = 10;
+
+    for (int j = 0; j < 3; j++)
+		if (y>= (j*cellH + j*lineH) && y <= (cellH + j*cellH + j*lineH))
+			return j;
+
+    return 0;
+}
+bool SDLManager::isInsideResetButton(int x, int y)
+{
+	return !isInsideGrid(x, y);
+}
+bool SDLManager::hasAudio()
+{
+    return startedAudio;
+}
+

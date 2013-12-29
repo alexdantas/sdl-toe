@@ -39,6 +39,14 @@ public:
 	//	@note Need to call refreshScreen() after.
 	static void renderSurface(SDL_Surface* source, SDL_Rect* crop, SDL_Rect* position);
 
+	static void renderBackground();
+
+    /// Places X on the screen according to it's position relative to #i.
+    //  @note #i means the logical position on the grid. This function
+    //        finds out the actual pixel position onscreen.
+    static void renderX(int i, int j);
+    static void renderO(int i, int j);
+
 	/// Pauses the whole program for #delay milliseconds (1/1000 of a second).
 	static void delay_ms(int delay);
 
@@ -50,9 +58,11 @@ public:
 	/// Cleans #image from memory, safe-checking if NULL.
 	static void freeImage(SDL_Surface* image);
 
-	/// Prints #msg on standard error output.
-	//	Defaults to the console.
+	/// Prints #msg on standard error output with prefix "Error: ".
 	static void errorLog(std::string msg);
+
+	/// Prints #msg on standard error output with prefix "Warning: ".
+	static void warningLog(std::string msg);
 
 	/// Tells if there's any music playing anywhere on the game.
 	static bool musicPlaying();
@@ -89,14 +99,26 @@ public:
 	//	If a key is visible according to the ASCII table.
 	static bool isPrintable(SDLKey key);
 
+    static bool isInsideGrid(int x, int y);
+	static bool isValidCell(int x, int y);
+	static int getIndexX(int x);
+    static int getIndexY(int y);
+	static bool isInsideResetButton(int x, int y);
+	static bool hasAudio();
+
 private:
 	/// Represents the whole game screen.
 	static SDL_Surface* screen;
 
+    static SDL_Surface* bg;
+
+    static SDL_Surface* x;
+
+    static SDL_Surface* o;
+
 	static int screenW;
 	static int screenH;
 
-static bool willQuit;
 	/// The framerate. By default, 60 frames per second.
 	static uint32_t framerate;
 
@@ -107,6 +129,8 @@ static bool willQuit;
 	static Timer  framerate_timer;
 
 	static uint32_t frame_delta;
+
+    static bool startedAudio;
 };
 
 #endif /* SDLMANAGER_H_DEFINED */

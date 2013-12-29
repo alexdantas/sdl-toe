@@ -9,15 +9,17 @@ public:
 	GameManager();
 	virtual ~GameManager();
 
+    enum GridType { NONE=0, X, O };
+	enum Player { ONE=0, TWO };
+
 	/// The main loop of the game.
 	//	Here's where the whole game hangs up.
 	void run();
 
-	/// Stores a buffer of input chars and print them onscreen.
-	void bufferInput(Buffer* buffer, SDLKey key, Uint16 unicode);
+    void reset();
 
-	/// Places #buffer onscreen.
-	void bufferPrint(Buffer* buffer);
+    void renderGrid();
+	void setCell(int i, int j, GridType type=NONE);
 
 private:
 
@@ -27,6 +29,8 @@ private:
 	/// Tells if we're gonna quit the game.
 	bool willQuit;
 
+    /// The logic state of the grids on the game.
+    GridType grid[3][3];
 };
 
 #endif /* GAMEMANAGER_H_DEFINED */
